@@ -81,6 +81,7 @@ int main() {
       << right << min_values[i] << setw(25) << max_values[i] << endl;
   }
 }
+-----------------------------------------------------------------------------------
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -141,6 +142,71 @@ int main() {
              << ", Имя: " << readStudents[i].name 
              << ", Ср. балл: " << readStudents[i].averageGrade << endl;
     }
+
+    return 0;
+}
+------------------------------------------------------------------------------
+#include <iostream>
+#include <fstream>
+#include <string>
+
+using namespace std;
+
+struct Student {
+    int id;
+    char name[50];
+    float grade;
+};
+
+// Функция для записи данных студентов в бинарный файл
+void writeStudentsToFile(const string& filename) {
+    ofstream outFile(filename, ios::binary);
+    if (!outFile) {
+        cerr << "Не удалось открыть файл для записи." << endl;
+        return;
+    }
+
+    Student students[10];
+
+    // Заполнение структур студентов
+    for (int i = 0; i < 10; ++i) {
+        students[i].id = i + 1;
+        cout << "Введите имя студента " << (i + 1) << ": ";
+        cin >> students[i].name;
+        cout << "Введите оценку студента " << (i + 1) << ": ";
+        cin >> students[i].grade;
+    }
+
+    // Запись данных в файл
+    outFile.write(reinterpret_cast<char*>(students), sizeof(students));
+    outFile.close();
+}
+
+// Функция для чтения данных студентов из бинарного файла
+void readStudentsFromFile(const string& filename) {
+    ifstream inFile(filename, ios::binary);
+    if (!inFile) {
+        cerr << "Не удалось открыть файл для чтения." << endl;
+        return;
+    }
+
+    Student students[10];
+    inFile.read(reinterpret_cast<char*>(students), sizeof(students));
+    inFile.close();
+
+    // Вывод данных студентов на экран
+    cout << "\nСписок студентов:\n";
+    for (int i = 0; i < 10; ++i) {
+        cout << "ID: " << students[i].id << ", Имя: " << students[i].name 
+             << ", Оценка: " << students[i].grade << endl;
+    }
+}
+
+int main() {
+    string filename = "students.dat";
+
+    writeStudentsToFile(filename);
+    readStudentsFromFile(filename);
 
     return 0;
 }
