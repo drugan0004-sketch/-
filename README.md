@@ -81,3 +81,66 @@ int main() {
       << right << min_values[i] << setw(25) << max_values[i] << endl;
   }
 }
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cstring>
+
+using namespace std;
+
+// Структура данных студента
+struct Student {
+    int id;
+    char name[50]; // Используем char[] для бинарной записи
+    double averageGrade;
+};
+
+int main() {
+    const int N = 10;
+    const char* filename = "students.bin";
+
+    // 1. Создание и запись бинарного файла
+    ofstream outFile(filename, ios::binary);
+    if (!outFile) {
+        cerr << "Ошибка открытия файла для записи!" << endl;
+        return 1;
+    }
+
+    Student s[N];
+    for (int i = 0; i < N; ++i) {
+        s[i].id = i + 1;
+        string name = "Student_" + to_string(i + 1);
+        strncpy(s[i].name, name.c_str(), 49);
+        s[i].name[49] = '\0';
+        s[i].averageGrade = 3.0 + (rand() % 20 + 10) / 10.0; // Случайная оценка 3.0-5.0
+        
+        // Запись структуры в бинарный файл [1]
+        outFile.write(reinterpret_cast<char*>(&s[i]), sizeof(Student));
+    }
+    outFile.close();
+    cout << "Данные успешно записаны в файл " << filename << endl;
+
+    // 2. Чтение данных из файла в массив
+    ifstream inFile(filename, ios::binary);
+    if (!inFile) {
+        cerr << "Ошибка открытия файла для чтения!" << endl;
+        return 1;
+    }
+
+    Student readStudents[N];
+    for (int i = 0; i < N; ++i) {
+        // Чтение структуры из бинарного файла [1]
+        inFile.read(reinterpret_cast<char*>(&readStudents[i]), sizeof(Student));
+    }
+    inFile.close();
+
+    // 3. Вывод данных на экран
+    cout << "\nДанные студентов из файла:" << endl;
+    for (int i = 0; i < N; ++i) {
+        cout << "ID: " << readStudents[i].id 
+             << ", Имя: " << readStudents[i].name 
+             << ", Ср. балл: " << readStudents[i].averageGrade << endl;
+    }
+
+    return 0;
+}
