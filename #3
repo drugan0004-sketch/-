@@ -1,0 +1,41 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+using namespace std;
+struct Student {
+    char name[50];
+    int age;
+};
+int main()
+{
+    setlocale(LC_ALL, "ru_RU.UTF-8");
+    Student studinfo[20] = { {"Егор",17}, {"Кирилл", 17}, {"Николай", 19},
+        {"Степа", 18}, {"Ирина", 20}, {"Сергей", 17}, {"Максим", 18},
+        {"Генадий",18}, {"Дарья",19}, {"Алексей",17}, {"Надежда",19} };
+    int i, a, b;
+    cout << "Введите номер первой записи (a): ";
+    cin >> a;
+    cout << "Введите номер второй записи (b): ";
+    cin >> b;
+    ofstream fout("C:\\Temp\\bin.dat", ios::out | ios::binary);
+    fout.write(reinterpret_cast<const char*>(&studinfo), sizeof(studinfo));
+    fout.close();
+    fstream file("C:\\Temp\\bin.dat", ios::in | ios::out | ios::binary);
+    streampos structSize = sizeof(Student);
+    Student studentA, studentB;
+    file.seekg(a * structSize); // Читаем запись a
+    file.read(reinterpret_cast<char*>(&studentA), structSize);
+    file.seekg(b * structSize); // Читаем запись b
+    file.read(reinterpret_cast<char*>(&studentB), structSize);
+    file.seekp(a * structSize); // Записываем запись B на место A
+    file.write(reinterpret_cast<const char*>(&studentB), structSize);
+    file.seekp(b * structSize); // Записываем запись A на место B
+    file.write(reinterpret_cast<const char*>(&studentA), structSize);
+    file.seekg(0); // Считываем обновлённые данные в массив и выводим первые заполненные записи
+    file.read(reinterpret_cast<char*>(&studinfo), sizeof(studinfo));
+    for (i = 0; i < 11; i++) {
+        cout << studinfo[i].name << " " << studinfo[i].age << endl;
+    }
+    file.close();
+    return 0;
+}
