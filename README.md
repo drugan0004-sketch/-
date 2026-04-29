@@ -210,3 +210,32 @@ int main() {
 
     return 0;
 }
+-----------------------------------------------------------------------------------------------------------------
+#include <iostream>
+#include <fstream>
+#include <string>
+using namespace std;
+struct Student {
+    char name[50];
+    int age;
+};
+int main()
+{
+    setlocale(LC_ALL, "ru_RU.UTF-8");
+    Student studinfo[20] = { {"Егор",17}, {"Кирилл", 17}, {"Николай", 19}, 
+        {"Степа", 18}, {"Ирина", 20}, {"Сергей", 17}, {"Максим", 18}, 
+        {"Генадий",18}, {"Дарья",19}, {"Алексей",17}, {"Надежда",19} };
+    int i;
+    ofstream fout("C:\\Temp\\bin.dat", ios::out | ios::binary);
+    fout.write((char*)&studinfo, sizeof(studinfo));
+    fout.close();
+    for (i = 0; i < 10; i++) { // очистка массива
+        studinfo[i].age = 0;}
+    ifstream fin("C:\\Temp\\bin.dat", ios::in | ios::binary);
+    fin.read((char*)&studinfo, sizeof(studinfo));
+    for (i = 0; i < 10; i++) { // вывести значения, прочитанные
+        // из файла
+        cout << studinfo[i].name << " " << studinfo[i].age << endl;
+    }
+    fin.close();
+}
