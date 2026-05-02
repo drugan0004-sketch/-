@@ -25,3 +25,170 @@ int main() {
     outfile.close();
     return 0;
 }
+=====================================================================
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <ctime>
+
+class Date {
+private:
+    int day;
+    int month;
+    int year;
+
+    // Вспомогательная функция: проверка корректности даты
+    bool isValidDate(int d, int m, int y) const {
+        if (y < 1 || m < 1 || m > 12 || d < 1) return false;
+
+        // Количество дней в каждом месяце (для невисокосного года)
+        int daysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+        // Учитываем високосный год для февраля
+        if (isLeapYear(y)) daysInMonth[1] = 29;
+
+        return d <= daysInMonth[m - 1];
+    }
+
+    // Вспомогательная функция: проверка високосного года
+    bool isLeapYear(int y) const {
+        return (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0);
+    }
+
+    // Вспомогательная функция: преобразование даты в количество дней с некоторой эпохи
+    long long toDays() const {
+        long long total = 0;
+        // Добавляем дни за прошедшие годы
+        for (int y = 1; y < year; ++y) {
+            total += isLeapYear(y) ? 366 : 365;
+        }
+        // Добавляем дни за прошедшие месяцы в текущем году
+        int daysInMonth[] = {31, 28 + isLeapYear(year), 31, 30, 31, 30,
+                           31, 31, 30, 31, 30, 31};
+        for (int m = 1; m < month; ++m) {
+            total += daysInMonth[m - 1];
+        }
+        // Добавляем дни
+        total += day - 1;
+        return total;
+    }
+
+public:
+    // Конструктор с тремя параметрами
+    Date(int d, int m, int y) {
+        if (!isValidDate(d, m, y)) {
+            throw std::invalid_argument("Некорректная дата");
+        }
+        day = d;
+        month = m;
+        year = y;
+    }
+
+    // Конструктор из строки
+    Date(const std::string& dateStr) {
+        std::istringstream iss(dateStr);
+        std::string part;
+        int parts[3];
+        int i = 0;
+
+        while (std::getline(iss, part, '.')) {
+            parts[i++] = std::stoi(part);
+        }
+
+        if (i != 2 && i != 3) {
+            throw std::invalid_argument("Неверный формат строки даты");
+        }
+
+        int d = parts[0], m = parts[1], y = parts[2];
+
+        // Если год двухзначный, преобразуем в четырёхзначный
+        if (y < 100) {
+            y += (y >= 20) ? 1900 : 2000; // эвристика: 21 → 2021, 99 → 1999
+        }
+
+        if (!isValidDate(d, m, y)) {
+            throw std::invalid_argument("Некорректная дата в строке");
+        }
+
+        day = d;
+        month = m;
+        year = y;
+    }
+
+    // Конструктор по умолчанию (текущая дата)
+    Date() {
+        std::time_t t = std::time(nullptr);
+        std::tm* now = std::localtime(&t);
+        day = now->tm_mday;
+        month = now->tm_mon + 1; // tm_mon — от 0 до 11
+        year = now->tm_year + 1900;
+    }
+
+    // Методы получения значений
+    int getDay() const { return day; }
+    int getMonth() const { return month; }
+    int getYear() const { return year; }
+
+    // Методы установки значений
+    void setDay(int d) {
+        if (!isValidDate(d, month, year)) {
+            throw std::invalid_argument("Некорректный день");
+        }
+        day = d;
+    }
+    void setMonth(int m) {
+        if (!isValidDate(day, m, year)) {
+            throw std::invalid_argument("Некорректный месяц");
+        }
+        month = m;
+    }
+    void setYear(int y) {
+        if (!isValidDate(day, month, y)) {
+            throw std::invalid_argument("Некорректный год");
+        }
+        year = y;
+    }
+
+    // Метод представления даты в виде строки
+    std::string toString() const {
+        std::ostringstream oss;
+        oss << (day < 10 ? "0" : "") << day << "."
+            << (month < 10 ? "0" : "") << month << "."
+            << year;
+        return oss.str();
+    }
+
+    // Перегрузка оператора сравнения
+    bool operator==(const Date& d) const {
+        return day == d.day && month == d.month && year == d.year;
+    }
+
+    // Метод, возвращающий разницу в днях между двумя датами
+    int daysTo(const Date& d) const {
+        return static_cast<int>(d.toDays() - this->toDays());
+    }
+};
+
+// Пример использования класса
+int main() {
+    try {
+        Date d1(15, 5, 2023);
+        Date d2("01.06.2023");
+        Date d3; // текущая дата
+
+        std::cout << "d1: " << d1.toString() << std::endl;
+        std::cout << "d2: " << d2.toString() << std::endl;
+        std::cout << "d3 (текущая): " << d3.toString() << std::endl;
+
+        std::cout << "d1 == d2: " << (d1 == d2 ? "true" : "false") << std::endl;
+        std::cout << "Дней от d1 до d2: " << d1.daysTo(d2) << std::endl;
+
+        d1.setDay(20);
+        std::cout << "После изменения дня: " << d1.toString() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Ошибка: " << e.what() << std::endl;
+    }
+
+    return 0;
+}
