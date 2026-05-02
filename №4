@@ -1,0 +1,27 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+using namespace std;
+
+int main() {
+    setlocale(LC_ALL, "ru_RU.UTF-8");
+    ifstream infile("C:\\Temp\\STUDENTS.TXT");
+    ofstream outfile("C:\\Temp\\GRANT.TXT");
+    string line;
+    
+    while (getline(infile, line)) {
+        string name;
+        int ege_score;
+        istringstream iss(line);
+        if (!(iss >> name >> ege_score)) {
+            continue;
+        }
+        if (ege_score >= 215) {
+            outfile << name << " " << ege_score << endl;
+        }
+    }
+    infile.close();
+    outfile.close();
+    return 0;
+}
