@@ -192,3 +192,100 @@ int main() {
 
     return 0;
 }
+\\\-----------------------------------------------------------------------
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <ctime>
+#include <sstream>
+
+using namespace std;
+
+// Структура «Вклад»
+struct Deposit {
+    string lastName;
+    string accountNumber;
+    double amount;
+    struct tm operationDate; // Дата операции
+};
+
+// Функция для парсинга даты из строки "ДД.ММ.ГГГГ"
+tm parseDate(string dateStr) {
+    tm t = {};
+    stringstream ss(dateStr);
+    char delimiter;
+    ss >> t.tm_mday >> delimiter >> t.tm_mon >> delimiter >> t.tm_year;
+    t.tm_mon -= 1;    // Месяцы от 0 до 11
+    t.tm_year -= 1900; // Годы с 1900
+    t.tm_isdst = -1;
+    return t;
+}
+
+// Функция для проверки, входит ли дата в последние 3 месяца
+bool isWithinLast3Months(tm opDate) {
+    time_t now = time(0);
+    tm *nowPtr = localtime(&now);
+    
+    // Преобразуем обе даты в time_t (секунды)
+    time_t opTime = mktime(&opDate);
+    
+    // 3 месяца в секундах (приблизительно: 3 * 30 * 24 * 60 * 60)
+    double secondsIn3Months = 3.0 * 30.5 * 24 * 60 * 60;
+    
+    return difftime(now, opTime) <= secondsIn3Months && difftime(now, opTime) >= 0;
+}
+
+int main() {
+    // Настройка локали для корректного отображения кириллицы (для Windows)
+    setlocale(LC_ALL, "Russian");
+
+    vector<Deposit> bank;
+    
+    // Пример заполнения данных (для теста)
+    bank.push_back({"Иванов", "1001", 50000.0, parseDate("15.03.2026")});
+    bank.push_back({"Петров", "1002", 20000.0, parseDate("01.01.2026")}); // Старая
+    bank.push_back({"Сидоров", "1003", 75000.0, parseDate("10.04.2026")});
+    bank.push_back({"Иванов", "1004", 10000.0, parseDate("20.02.2026")});
+    
+    cout << "--- Клиенты, вносившие изменения за последние 3 месяца ---" << endl;
+    for (const auto& dep : bank) {
+        if (isWithinLast3Months(dep.operationDate)) {
+            cout << "Клиент: " << dep.lastName 
+                 << ", Счет: " << dep.accountNumber 
+                 << ", Сумма: " << dep.amount 
+                 << ", Дата: " << dep.operationDate.tm_mday << "." 
+                 << dep.operationDate.tm_mon + 1 << "." 
+                 << dep.operationDate.tm_year + 1900 << endl;
+        }
+    }
+
+    // Запрос фамилии для создания файла
+    string searchName;
+    cout << "\nВведите фамилию клиента для создания списка счетов: ";
+    cin >> searchName;
+
+    // Создание текстового файла
+    string filename = searchName + "_accounts.txt";
+    ofstream outFile(filename);
+    
+    if (outFile.is_open()) {
+        outFile << "Список счетов клиента: " << searchName << endl;
+        outFile << "-----------------------------------" << endl;
+        bool found = false;
+        for (const auto& dep : bank) {
+            if (dep.lastName == searchName) {
+                outFile << "Счет: " << dep.accountNumber 
+                        << ", Сумма: " << dep.amount << endl;
+                found = true;
+            }
+        }
+        if (!found) outFile << "Счета не найдены." << endl;
+        outFile.close();
+        cout << "Данные успешно записаны в файл: " << filename << endl;
+    } else {
+        cerr << "Ошибка создания файла!" << endl;
+    }
+
+    return 0;
+}
