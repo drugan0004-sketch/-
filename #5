@@ -107,3 +107,144 @@ int main() {
 
     return 0;
 }
+-----------------------------------------------------------------------
+// Структура для хранения данных студента
+struct Student {
+    string lastName;
+    int age;
+    Student(const string& name = "", int age = 0)
+        : lastName(name), age(age) {
+    }
+};
+template <typename T>
+class MyList {
+private:
+    struct Node {
+        T data;
+        Node* next;
+        Node(const T& value) : data(value), next(nullptr) {}
+    };
+    Node* head;
+    size_t size;
+public:
+    // Конструктор
+    MyList() : head(nullptr), size(0) {}
+    // Добавление элемента в конец списка
+    void push_back(const T& value) {
+        Node* newNode = new Node(value);
+        if (head == nullptr) {
+            head = newNode;
+        }
+        else {
+            Node* current = head;
+            while (current->next != nullptr) {
+                current = current->next;
+            }
+            current->next = newNode;
+        }
+        ++size;
+    }
+    // Поиск по фамилии
+    bool searchByLastName(const string& lastName) const {
+        bool found = false;
+        Node* current = head;
+        int position = 1;
+        cout << "\nРезультаты поиска по фамилии '" << lastName << "':\n";
+        while (current != nullptr) {
+            if (current->data.lastName == lastName) {
+                cout << "Позиция " << position << ": "
+                    << current->data.lastName << ", возраст "
+                    << current->data.age << "\n";
+                found = true;}
+            current = current->next;
+            ++position;
+        }
+        if (!found) {
+            cout << "Студенты с фамилией '" << lastName << "' не найдены.\n";}
+        return found;
+    }
+    // Поиск по возрасту
+    bool searchByAge(int age) const {
+        bool found = false;
+        Node* current = head;
+        int position = 1;
+
+        cout << "\nРезультаты поиска по возрасту " << age << ":\n";
+        while (current != nullptr) {
+            if (current->data.age == age) {
+                cout << "Позиция " << position << ": "
+                    << current->data.lastName << ", возраст "
+                    << current->data.age << "\n";
+                found = true;
+            }
+            current = current->next;
+            ++position;
+        }
+        if (!found) {
+            cout << "Студенты возраста " << age << " не найдены.\n";
+        }
+        return found;
+    }
+
+};
+// Функция для ввода возраста с проверкой корректности
+int inputAge() {
+    int age;
+    while (true) {
+        std::cout << "Введите возраст: ";
+        std::cin >> age;
+
+        if (std::cin.fail() || age < 0 || age > 150) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Ошибка! Введите корректный возраст (0–150): ";
+        }
+        else {
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            break;
+        }
+    }
+    return age;
+}
+int main() {
+    setlocale(LC_ALL, "ru_RU.UTF-8");
+    MyList<Student> studentList;
+
+    // Добавляем тестовые данные
+    studentList.push_back(Student("Ivanov", 20));
+    studentList.push_back(Student("Petrov", 19));
+    studentList.push_back(Student("Sidorov", 20));
+    studentList.push_back(Student("Kozlov", 21));
+    studentList.push_back(Student("Ivanov", 18));
+
+    int choice;
+    do {
+        cout << "\n=== ПОИСК СТУДЕНТОВ ===\n";
+        cout << "1. Поиск по фамилии\n";
+        cout << "2. Поиск по возрасту\n";
+        cout << "0. Выход\n";
+        cout << "Выберите действие: ";
+        cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        switch (choice) {
+        case 1: {
+            string lastName;
+            cout << "Введите фамилию для поиска: ";
+            getline(cin, lastName);
+            studentList.searchByLastName(lastName);
+            break;
+        }
+        case 2: {
+            int age = inputAge();
+            studentList.searchByAge(age);
+            break;
+        }
+        case 0:
+            cout << "Выход из программы.\n";
+            break;
+        default:
+            cout << "Неверный выбор. Попробуйте снова.\n";
+        }
+    } while (choice != 0);
+    return 0;
+}
