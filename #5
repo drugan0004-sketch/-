@@ -248,3 +248,238 @@ int main() {
     } while (choice != 0);
     return 0;
 }
+============================================================
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cstring>
+
+// Структура «Вклад»
+struct Deposit {
+    char lastName[50];
+    int accountNumber;
+    double amount;
+    int day, month, year;
+};
+
+// Узел для связного списка
+struct Node {
+    Deposit data;
+    Node* next;
+};
+
+class BankSystem {
+private:
+    Node* head;
+
+public:
+    BankSystem() : head(nullptr) {}
+    ~BankSystem() { clear(); }
+
+    // Добавление данных
+    void addDeposit(const Deposit& deposit) {
+        Node* newNode = new Node;
+        newNode->data = deposit;
+        newNode->next = head;
+        head = newNode;
+    }
+
+    // Удаление данных по номеру счёта
+    bool deleteDeposit(int accountNumber) {
+        if (!head) return false;
+
+        if (head->data.accountNumber == accountNumber) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+            return true;
+        }
+
+        Node* current = head;
+        while (current->next && current->next->data.accountNumber != accountNumber) {
+            current = current->next;
+        }
+
+        if (current->next) {
+            Node* temp = current->next;
+            current->next = current->next->next;
+            delete temp;
+            return true;
+        }
+        return false;
+    }
+
+    // Вывод всех данных на экран
+    void displayAll() const {
+        if (!head) {
+            std::cout << "Список вкладов пуст.\n";
+            return;
+        }
+
+        std::cout << "\n=== ВСЕ ВКЛАДЫ ===\n";
+        Node* current = head;
+        int count = 1;
+        while (current) {
+            std::cout << count << ". "
+                      << "Фамилия: " << current->data.lastName << ", "
+                      << "Счёт: " << current->data.accountNumber << ", "
+                      << "Сумма: " << current->data.amount << ", "
+                      << "Дата: " << current->data.day << "."
+                      << current->data.month << "." << current->data.year << "\n";
+            current = current->next;
+            ++count;
+        }
+    }
+
+    // Сохранение в бинарный файл
+    void saveToFile(const std::string& filename) const {
+        std::ofstream file(filename, std::ios::binary);
+        if (!file) {
+            std::cout << "Ошибка открытия файла для записи!\n";
+            return;
+        }
+
+        Node* current = head;
+        while (current) {
+            file.write(reinterpret_cast<char*>(&current->data), sizeof(Deposit));
+            current = current->next;
+        }
+        file.close();
+        std::cout << "Данные сохранены в файл '" << filename << "'\n";
+    }
+
+    // Чтение из бинарного файла
+    void loadFromFile(const std::string& filename) {
+        clear(); // Очищаем текущий список
+
+        std::ifstream file(filename, std::ios::binary);
+        if (!file) {
+            std::cout << "Файл '" << filename << "' не найден.\n";
+            return;
+        }
+
+        Deposit temp;
+        while (file.read(reinterpret_cast<char*>(&temp), sizeof(Deposit))) {
+            addDeposit(temp);
+        }
+        file.close();
+        std::cout << "Данные загружены из файла '" << filename << "'\n";
+    }
+
+    // Индивидуальное задание: статистика операций по месяцам
+    void monthlyStatistics() const {
+        // Массив для подсчёта количества операций по месяцам (1–12)
+        int operations[13] = {0}; // Индекс 0 не используется
+
+        Node* current = head;
+        while (current) {
+            int month = current->data.month;
+            if (month >= 1 && month <= 12) {
+                operations[month]++;
+            }
+            current = current->next;
+        }
+
+        std::cout << "\n=== СТАТИСТИКА ОПЕРАЦИЙ ПО МЕСЯЦАМ ===\n";
+        bool hasData = false;
+        for (int i = 1; i <= 12; ++i) {
+            if (operations[i] > 0) {
+                std::cout << "Месяц " << i << ": " << operations[i]
+                          << " операций\n";
+                hasData = true;
+            }
+        }
+
+        if (!hasData) {
+            std::cout << "Нет данных для статистики.\n";
+        }
+    }
+
+private:
+    // Очистка списка (используется в деструкторе)
+    void clear() {
+        while (head) {
+            Node* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+};
+
+// Ввод данных вклада
+Deposit inputDeposit() {
+    Deposit deposit;
+    std::cout << "Введите фамилию клиента: ";
+    std::cin.getline(deposit.lastName, 50);
+
+    std::cout << "Введите номер лицевого счёта: ";
+    std::cin >> deposit.accountNumber;
+
+    std::cout << "Введите сумму на счёте: ";
+    std::cin >> deposit.amount;
+
+    std::cout << "Введите дату операции (день месяц год): ";
+    std::cin >> deposit.day >> deposit.month >> deposit.year;
+
+    std::cin.ignore(); // Очистка буфера
+    return deposit;
+}
+
+int main() {
+    BankSystem bank;
+    std::string filename = "deposits.dat";
+    int choice;
+
+    do {
+        std::cout << "\n=== СИСТЕМА УЧЁТА ВКЛАДОВ ===\n";
+        std::cout << "1. Добавить данные\n";
+        std::cout << "2. Удалить данные по номеру счёта\n";
+        std::cout << "3. Вывести все данные\n";
+        std::cout << "4. Сохранить в файл\n";
+        std::cout << "5. Загрузить из файла\n";
+        std::cout << "6. Статистика операций по месяцам\n";
+        std::cout << "0. Выход\n";
+        std::cout << "Выберите действие: ";
+        std::cin >> choice;
+        std::cin.ignore();
+
+        switch (choice) {
+            case 1: {
+                Deposit deposit = inputDeposit();
+                bank.addDeposit(deposit);
+                std::cout << "Вклад добавлен.\n";
+                break;
+            }
+            case 2: {
+                int accountNum;
+                std::cout << "Введите номер счёта для удаления: ";
+                std::cin >> accountNum;
+                if (bank.deleteDeposit(accountNum)) {
+                    std::cout << "Вклад удалён.\n";
+                } else {
+                    std::cout << "Вклад с номером " << accountNum << " не найден.\n";
+                }
+                break;
+            }
+            case 3:
+                bank.displayAll();
+                break;
+            case 4:
+                bank.saveToFile(filename);
+                break;
+            case 5:
+                bank.loadFromFile(filename);
+                break;
+            case 6:
+                bank.monthlyStatistics();
+                break;
+            case 0:
+                std::cout << "Выход из программы.\n";
+                break;
+            default:
+                std::cout << "Неверный выбор. Попробуйте снова.\n";
+        }
+    } while (choice != 0);
+
+    return 0;
+}
