@@ -1,0 +1,109 @@
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <ctime>
+#include <stdexcept>
+template <typename T>
+class MyList {
+private:
+    struct Node {
+        T data;
+        Node* next;
+
+        Node(const T& value) : data(value), next(nullptr) {}
+    };
+
+    Node* head;
+    Node* tail;
+    size_t size;
+
+public:
+    // Конструктор
+    MyList() : head(nullptr), tail(nullptr), size(0) {}
+    // Метод для добавления элемента в конец списка
+    void push_back(const T& value) {
+        Node* newNode = new Node(value);
+        if (tail == nullptr) {
+            head = tail = newNode;
+        }
+        else {
+            tail->next = newNode;
+            tail = newNode;
+        }
+        ++size;
+    }
+    // Метод для удаления последнего элемента списка
+    bool pop_back() {
+        // Если список пуст, возвращаем false
+        if (head == nullptr) {
+            return false;
+        }
+
+        // Если в списке только один элемент
+        if (head == tail) {
+            delete head;
+            head = tail = nullptr;
+        }
+        else {
+            // Находим предпоследний элемент
+            Node* current = head;
+            while (current->next != tail) {
+                current = current->next;
+            }
+
+            // Удаляем последний элемент и обновляем tail
+            delete tail;
+            tail = current;
+            tail->next = nullptr;
+        }
+
+        --size;
+        return true;
+    }
+    // Метод для вывода содержимого списка
+    void print() const {
+        Node* current = head;
+        while (current != nullptr) {
+            std::cout << current->data;
+            if (current->next != nullptr) {
+                std::cout << " -> ";
+            }
+            current = current->next;
+        }
+        std::cout << std::endl;
+    }
+};
+// Пример использования
+int main() {
+    setlocale(LC_ALL, "ru_RU.UTF-8");
+    MyList<int> myList;
+
+    // Добавляем элементы
+    myList.push_back(10);
+    myList.push_back(20);
+    myList.push_back(30);
+    myList.push_back(40);
+
+    std::cout << "Исходный список: ";
+    myList.print();
+
+    // Удаляем последний элемент
+    if (myList.pop_back()) {
+        std::cout << "Последний элемент удалён. Новый список: ";
+        myList.print();
+    }
+    else {
+        std::cout << "Список пуст, удаление невозможно." << std::endl;
+    }
+
+    // Ещё одно удаление
+    if (myList.pop_back()) {
+        std::cout << "Ещё один элемент удалён. Новый список: ";
+        myList.print();
+    }
+
+    return 0;
+}
